@@ -17,8 +17,7 @@ public class DescriptorImpl extends BuildStepDescriptor<Publisher> {
     private transient Campfire campfire;
     private boolean enabled = false;
     private String subdomain;
-    private String email;
-    private String password;
+    private String token;
     private String room;
 
     public DescriptorImpl() {
@@ -34,12 +33,8 @@ public class DescriptorImpl extends BuildStepDescriptor<Publisher> {
         return subdomain;
     }
 
-    public String getEmail() {
-        return email;
-    }
-
-    public String getPassword() {
-        return password;
+    public String getToken() {
+        return token;
     }
 
     public String getRoom() {
@@ -56,14 +51,10 @@ public class DescriptorImpl extends BuildStepDescriptor<Publisher> {
     @Override
     public Publisher newInstance(StaplerRequest req, JSONObject formData) throws FormException {
         CampfireNotifier result = new CampfireNotifier();
-        subdomain = req.getParameter("subdomain");
-        email = req.getParameter("email");
-        password = req.getParameter("password");
-        room = req.getParameter("room");
         try {
             initCampfire();
-            result.room = campfire.findOrCreateRoomByName(room);
-            result.room.join();
+            result.setRoom(campfire.findOrCreateRoomByName(room));
+            result.getRoom().join();
         } catch (IOException e) {
             throw new FormException(e, "Cannot join room");
         } catch (ParserConfigurationException e) {
@@ -76,16 +67,26 @@ public class DescriptorImpl extends BuildStepDescriptor<Publisher> {
         return result;
     }
 
-    private void initCampfire() throws IOException {
-        campfire = new Campfire(subdomain, email, password);
-        campfire.login();
+    @Override
+    public boolean configure(StaplerRequest req, JSONObject json) throws hudson.model.Descriptor.FormException {
+      subdomain = req.getParameter("subdomain");
+      token = req.getParameter("token");
+      room = req.getParameter("room");
+      save();
+      return super.configure(req, json);
+    }
+
+    protected Campfire initCampfire() throws IOException {
+        if (campfire == null) {
+            campfire = new Campfire(subdomain, token);
+        }
+        return campfire;
     }
 
     public void stop() throws IOException {
         if (campfire == null) {
             return;
         }
-        campfire.logout();
         campfire = null;
     }
 

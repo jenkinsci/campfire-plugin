@@ -26,18 +26,14 @@ public class Room {
     }
 
     public void join() throws IOException {
-        campfire.get("room/" + id);
+        campfire.post("room/" + id + "/join.xml", "");
     }
 
     public void leave() throws IOException {
-        campfire.post("room/" + id + "/leave", new HashMap<String, String>());
+        campfire.post("room/" + id + "/leave.xml", "");
     }
 
     public void speak(String message) throws IOException {
-        Map<String, String> params = new HashMap<String, String>();
-        params.put("message", message);
-        params.put("t", String.valueOf(new Date().getTime()));
-        System.out.println("Speaking:" + message);
-        campfire.post("room/" + id + "/speak", params);
+        campfire.post("room/" + id + "/speak.xml", "<message><type>TextMessage</type><body>" + message + "</body></message>");
     }
 }

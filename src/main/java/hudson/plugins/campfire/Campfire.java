@@ -1,7 +1,11 @@
 package hudson.plugins.campfire;
 
 import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.UsernamePasswordCredentials;
+import org.apache.commons.httpclient.Credentials;
+import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -13,6 +17,8 @@ import java.util.Map;
 import java.util.HashMap;
 
 import com.gargoylesoftware.htmlunit.WebClient;
+import com.gargoylesoftware.htmlunit.xml.XmlPage;
+import com.gargoylesoftware.htmlunit.xml.XmlElement;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.gargoylesoftware.htmlunit.html.HtmlElement;
 
@@ -20,15 +26,16 @@ public class Campfire {
     private HttpClient client;
     private WebClient webClient;
     private String subdomain;
-    private String email;
-    private String password;
+    private String token;
 
-    public Campfire(String subdomain, String email, String password) {
+    public Campfire(String subdomain, String token) {
         super();
         this.subdomain = subdomain;
-        this.email = email;
-        this.password = password;
+        this.token = token;
         client = new HttpClient();
+        Credentials defaultcreds = new UsernamePasswordCredentials(token, "x");
+        client.getState().setCredentials(new AuthScope(getHost(), 80, AuthScope.ANY_REALM), defaultcreds);
+        client.getParams().setAuthenticationPreemptive(true);
         client.getParams().setParameter("http.useragent", "JTinder");
         webClient = new WebClient();
         webClient.setWebConnection(new HttpClientBackedWebConnection(webClient, client));
@@ -36,14 +43,14 @@ public class Campfire {
         webClient.setCookiesEnabled(true);
     }
 
-    public int post(String url, Map<String, String> params) throws IOException {
-        PostMethod post = new PostMethod("http://" + this.subdomain + ".campfirenow.com/" + url);
-        post.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-        post.setRequestHeader("X-Prototype-Version", "1.5.1.1");
-        post.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-        for (String key : params.keySet()) {
-            post.setParameter(key, params.get(key));
-        }
+    protected String getHost() {
+        return this.subdomain + ".campfirenow.com";
+    }
+
+    public int post(String url, String body) throws IOException {
+        PostMethod post = new PostMethod("http://" + getHost() + "/" + url);
+        post.setRequestHeader("Content-Type", "application/xml");
+        post.setRequestEntity(new StringRequestEntity(body, "application/xml", "UTF8"));
         try {
             return client.executeMethod(post);
         } finally {
@@ -51,37 +58,21 @@ public class Campfire {
         }
     }
 
-    public HtmlPage get(String url) throws IOException {
-        return (HtmlPage) webClient.getPage("http://" + this.subdomain + ".campfirenow.com/" + url);
+    public XmlPage get(String url) throws IOException {
+        return (XmlPage) webClient.getPage("http://" + getHost() + "/" + url);
     }
 
     public boolean verify(int returnCode) {
         return (returnCode == 200 || (returnCode > 301 && returnCode < 399));
     }
 
-    public void login() throws IOException {
-        Map<String, String> params = new HashMap<String, String>();
-        params.put("email_address", this.email);
-        params.put("password", this.password);
-        verify(post("login", params));
-    }
-
-    public void logout() throws IOException {
-        get("logout");
-    }
-
     private List<Room> getRooms() throws IOException, ParserConfigurationException, SAXException, XPathExpressionException {
-        HtmlPage page = get("");
+        XmlPage page = get("rooms.xml");
         List<Room> rooms = new ArrayList<Room>();
-        for (HtmlElement div : (List<HtmlElement>) page.getByXPath("//div[contains(@class, 'room')]")) {
-            rooms.add(new Room(this, ((HtmlElement) div.getByXPath(".//h2/a").get(0)).getTextContent().trim(), getRoomIdFromElement(div.getId())));
+        for (XmlElement roomElement : (List<XmlElement>) page.getByXPath("//room")) {
+            rooms.add(new Room(this, ((XmlElement) roomElement.getByXPath(".//name").get(0)).getTextContent().trim(), ((XmlElement) roomElement.getByXPath(".//id").get(0)).getTextContent().trim()));
         }
         return rooms;
-    }
-
-    private String getRoomIdFromElement(String elementId) {
-        String[] tokens = elementId.split("_");
-        return tokens[tokens.length - 1].trim();
     }
 
     private Room findRoomByName(String name) throws IOException, ParserConfigurationException, XPathExpressionException, SAXException {
@@ -94,10 +85,7 @@ public class Campfire {
     }
 
     private Room createRoom(String name) throws IOException, ParserConfigurationException, XPathExpressionException, SAXException {
-        Map<String, String> params = new HashMap<String, String>();
-        params.put("room[name]", name);
-        params.put("room[topic]", "");
-        verify(post("account/create/room?from=lobby", params));
+        verify(post("rooms.xml", "<request><room><name>" + name + "</name><topic></topic></room></request>"));
         return findRoomByName(name);
     }
 

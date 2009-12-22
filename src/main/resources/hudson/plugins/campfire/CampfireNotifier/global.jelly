@@ -11,20 +11,15 @@
     tags they use. Views are always organized according to its owner class,
     so it should be straightforward to find them.
   -->
-  <!--<f:section title="Campfire Notification">-->
-        <!--<f:optionalBlock name="campfire_notifier_enabled" title="Enable Campfire Notification" checked="${descriptor.isEnabled()}">-->
-            <!--<f:entry title="Hostname" description="Hostname of the Campfire server">-->
-              <!--http://<f:textbox name="campfire_notifier_subdomain" value="${descriptor.getSubdomain()}" />.campfirenow.com-->
-            <!--</f:entry>-->
-            <!--<f:entry title="Email" description="Email">-->
-              <!--<f:textbox name="campfire_notifier_email" value="${descriptor.getEmail()}" />-->
-            <!--</f:entry>-->
-            <!--<f:entry title="Password" description="Password">-->
-              <!--<f:password name="campfire_notifier_password" value="${descriptor.getPassword()}" />-->
-            <!--</f:entry>-->
-            <!--<f:entry title="Room" description="Room the bot should join">-->
-              <!--<f:textbox name="campfire_notifier_room" value="${descriptor.getRoom()}" />-->
-            <!--</f:entry>-->
-    	<!--</f:optionalBlock>-->
-  <!--</f:section>-->
+<f:section title="Global Campfire Notifier Settings">
+	  <f:entry title="Hostname" description="Hostname of the Campfire server">
+	    http://<f:textbox name="subdomain" value="${descriptor.getSubdomain()}" />.campfirenow.com
+	  </f:entry>
+	  <f:entry title="Token" description="The authentication token of the bot">
+	    <f:password name="token" value="${descriptor.getToken()}" />
+	  </f:entry>
+	  <f:entry title="Room" description="Room the bot should join">
+	    <f:textbox name="room" value="${descriptor.getRoom()}" />
+	  </f:entry>
+  </f:section>
 </j:jelly>

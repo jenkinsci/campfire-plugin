@@ -11,7 +11,7 @@ import java.io.IOException;
 
 public class CampfireNotifier extends Notifier {
 
-    public Room room;
+    private Room room;
 
     /**
      * Descriptor should be singleton.
@@ -19,12 +19,25 @@ public class CampfireNotifier extends Notifier {
     @Extension
     public static final DescriptorImpl DESCRIPTOR = new DescriptorImpl();
 
+    public void setRoom(Room room) {
+        this.room = room;
+    }
+
+    public Room getRoom() {
+        return this.room;
+    }
+
     public BuildStepMonitor getRequiredMonitorService() {
         return BuildStepMonitor.BUILD;
     }
 
     private void publish(AbstractBuild<?, ?> build) throws IOException {
+        checkCampfireConnection();
         room.speak(build.getProject().getName() + " " + build.getDisplayName() + " completed:" + build.getResult().toString());
+    }
+
+    private void checkCampfireConnection() throws IOException {
+        DESCRIPTOR.initCampfire();
     }
 
     @Override

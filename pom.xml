@@ -10,7 +10,7 @@
   <groupId>org.jvnet.hudson.plugins</groupId>
   <artifactId>campfire</artifactId>
   <packaging>hpi</packaging>
-  <version>2.1-SNAPSHOT</version>
+  <version>2.1</version>
   <name>Hudson Campfire Plugin</name>
   <description>A Build status publisher that notifies channels on a Campfire server</description>
   <url>http://wiki.hudson-ci.org/display/HUDSON/Campfire+Plugin</url>
@@ -53,4 +53,10 @@
       <name>Joshua Krall</name>
     </developer>  
   </developers>
+
+  <scm>
+    <connection>scm:svn:https://guest@svn.dev.java.net/svn/hudson/tags/campfire-2.1</connection>
+    <developerConnection>scm:svn:https://svn.dev.java.net/svn/hudson/tags/campfire-2.1</developerConnection>
+    <url>https://hudson.dev.java.net/source/browse/hudson/hudson/plugins/campfire/tags/campfire-2.1</url>
+  </scm>
 </project>

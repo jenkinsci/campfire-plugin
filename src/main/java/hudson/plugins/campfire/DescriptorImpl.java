@@ -14,11 +14,12 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathExpressionException;
 
 public class DescriptorImpl extends BuildStepDescriptor<Publisher> {
-    private transient Campfire campfire;
     private boolean enabled = false;
     private String subdomain;
     private String token;
     private String room;
+    private String hudsonUrl;
+    private boolean ssl;
 
     public DescriptorImpl() {
         super(CampfireNotifier.class);
@@ -41,6 +42,14 @@ public class DescriptorImpl extends BuildStepDescriptor<Publisher> {
         return room;
     }
 
+    public String getHudsonUrl() {
+        return hudsonUrl;
+    }
+
+    public boolean getSsl() {
+        return ssl;
+    }
+
     public boolean isApplicable(Class<? extends AbstractProject> aClass) {
         return true;
     }
@@ -50,44 +59,25 @@ public class DescriptorImpl extends BuildStepDescriptor<Publisher> {
      */
     @Override
     public Publisher newInstance(StaplerRequest req, JSONObject formData) throws FormException {
-        CampfireNotifier result = new CampfireNotifier();
         try {
-            initCampfire();
-            result.setRoom(campfire.findOrCreateRoomByName(room));
-            result.getRoom().join();
-        } catch (IOException e) {
-            throw new FormException(e, "Cannot join room");
-        } catch (ParserConfigurationException e) {
-            throw new FormException(e, "Cannot join room");
-        } catch (XPathExpressionException e) {
-            throw new FormException(e, "Cannot join room");
-        } catch (SAXException e) {
-            throw new FormException(e, "Cannot join room");
+            return new CampfireNotifier(subdomain, token, room, hudsonUrl, ssl);
+        } catch (Exception e) {
+            throw new FormException("Failed to initialize campfire notifier - check your global campfire notifier configuration settings", e, "");
         }
-        return result;
     }
 
     @Override
-    public boolean configure(StaplerRequest req, JSONObject json) throws hudson.model.Descriptor.FormException {
-      subdomain = req.getParameter("subdomain");
-      token = req.getParameter("token");
-      room = req.getParameter("room");
-      save();
-      return super.configure(req, json);
-    }
-
-    protected Campfire initCampfire() throws IOException {
-        if (campfire == null) {
-            campfire = new Campfire(subdomain, token);
+    public boolean configure(StaplerRequest req, JSONObject json) throws FormException {
+        subdomain = req.getParameter("campfireSubdomain");
+        token = req.getParameter("campfireToken");
+        room = req.getParameter("campfireRoom");
+        hudsonUrl = req.getParameter("campfireHudsonUrl");
+        if ( hudsonUrl != null && !hudsonUrl.endsWith("/") ) {
+            hudsonUrl = hudsonUrl + "/";
         }
-        return campfire;
-    }
-
-    public void stop() throws IOException {
-        if (campfire == null) {
-            return;
-        }
-        campfire = null;
+        ssl = req.getParameter("campfireSsl") != null;
+        save();
+        return super.configure(req, json);
     }
 
     /**

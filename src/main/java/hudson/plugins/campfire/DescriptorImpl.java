@@ -1,17 +1,13 @@
 package hudson.plugins.campfire;
 
-import hudson.tasks.Publisher;
-import hudson.tasks.BuildStepDescriptor;
 import hudson.model.AbstractProject;
-
-import java.io.IOException;
-
-import org.kohsuke.stapler.StaplerRequest;
-import org.xml.sax.SAXException;
+import hudson.tasks.BuildStepDescriptor;
+import hudson.tasks.Publisher;
 import net.sf.json.JSONObject;
+import org.kohsuke.stapler.StaplerRequest;
 
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.xpath.XPathExpressionException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class DescriptorImpl extends BuildStepDescriptor<Publisher> {
     private boolean enabled = false;
@@ -20,6 +16,9 @@ public class DescriptorImpl extends BuildStepDescriptor<Publisher> {
     private String room;
     private String hudsonUrl;
     private boolean ssl;
+    private boolean smartNotify;
+    private boolean sound;
+    private static final Logger LOGGER = Logger.getLogger(DescriptorImpl.class.getName());
 
     public DescriptorImpl() {
         super(CampfireNotifier.class);
@@ -49,6 +48,14 @@ public class DescriptorImpl extends BuildStepDescriptor<Publisher> {
     public boolean getSsl() {
         return ssl;
     }
+    
+    public boolean getSmartNotify() {
+        return smartNotify;
+    }
+
+    public boolean getSound() {
+        return sound;
+    }
 
     public boolean isApplicable(Class<? extends AbstractProject> aClass) {
         return true;
@@ -59,10 +66,16 @@ public class DescriptorImpl extends BuildStepDescriptor<Publisher> {
      */
     @Override
     public Publisher newInstance(StaplerRequest req, JSONObject formData) throws FormException {
+        String projectRoom = req.getParameter("roomName");
+        if ( projectRoom == null || projectRoom.trim().length() == 0 ) {
+            projectRoom = room;
+        }
         try {
-            return new CampfireNotifier(subdomain, token, room, hudsonUrl, ssl);
+            return new CampfireNotifier(subdomain, token, projectRoom, hudsonUrl, ssl, smartNotify, sound);
         } catch (Exception e) {
-            throw new FormException("Failed to initialize campfire notifier - check your global campfire notifier configuration settings", e, "");
+            String message = "Failed to initialize campfire notifier - check your campfire notifier configuration settings: " + e.getMessage();
+            LOGGER.log(Level.WARNING, message, e);
+            throw new FormException(message, e, "");
         }
     }
 
@@ -76,6 +89,15 @@ public class DescriptorImpl extends BuildStepDescriptor<Publisher> {
             hudsonUrl = hudsonUrl + "/";
         }
         ssl = req.getParameter("campfireSsl") != null;
+        smartNotify = req.getParameter("campfireSmartNotify") != null;
+        sound = req.getParameter("campfireSound") != null;
+        try {
+            new CampfireNotifier(subdomain, token, room, hudsonUrl, ssl, smartNotify, sound);
+        } catch (Exception e) {
+            String message = "Failed to initialize campfire notifier - check your global campfire notifier configuration settings: " + e.getMessage();
+            LOGGER.log(Level.WARNING, message, e);
+            throw new FormException(message, e, "");
+        }
         save();
         return super.configure(req, json);
     }

@@ -34,8 +34,8 @@ Yay, thanks Dante, and welcome aboard!
 
 ### Installation
 
-A pre-built hpi file is provided in the downloads area on github. You should be
-able to upload this to your Jenkins instance via the advanced tab of the plugin
+A pre-built (snapshot) hpi file is provided in jenkins-on-jenkins ( http://ci.jenkins-ci.org/view/Plugins/job/plugins_campfire/ ).
+You should be able to upload this to your Jenkins instance via the advanced tab of the plugin
 manager. This build should be based on the latest stable/tagged release. To get
 the latest development version, you should build from source...
 

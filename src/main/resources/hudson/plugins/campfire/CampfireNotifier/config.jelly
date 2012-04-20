@@ -3,6 +3,14 @@
     This jelly script is used for per-project configuration.
     See global.jelly for a general discussion about jelly script.
   -->
+    <f:entry title="Project Subdomain" description="Optional. Use to send notifications to a subdomain other than the default (${descriptor.getSubdomain()})" help="${rootURL}/plugin/campfire/help-projectConfig-subdomain.html">
+      <f:textbox name="cfSubdomain" value="${instance.getConfiguredSubdomain()}"/>
+    </f:entry>
+
+    <f:entry title="Project API Token" description="Optional. Use to send notifications to an API token other than the default (${descriptor.getToken()})" help="${rootURL}/plugin/campfire/help-projectConfig-token.html">
+      <f:textbox name="cfToken" value="${instance.getConfiguredToken()}"/>
+    </f:entry>
+
     <f:entry title="Project Room Name" description="Optional. Use to send notifications to a room other than the default (${descriptor.getRoom()})" help="${rootURL}/plugin/campfire/help-projectConfig-room.html">
       <f:textbox name="roomName" value="${instance.getConfiguredRoomName()}"/>
     </f:entry>

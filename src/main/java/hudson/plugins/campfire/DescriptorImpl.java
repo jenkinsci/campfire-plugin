@@ -48,7 +48,7 @@ public class DescriptorImpl extends BuildStepDescriptor<Publisher> {
     public boolean getSsl() {
         return ssl;
     }
-    
+
     public boolean getSmartNotify() {
         return smartNotify;
     }
@@ -67,11 +67,19 @@ public class DescriptorImpl extends BuildStepDescriptor<Publisher> {
     @Override
     public Publisher newInstance(StaplerRequest req, JSONObject formData) throws FormException {
         String projectRoom = req.getParameter("roomName");
+        String projectToken = req.getParameter("cfToken");
+        String projectSubdomain = req.getParameter("cfSubdomain");
         if ( projectRoom == null || projectRoom.trim().length() == 0 ) {
             projectRoom = room;
         }
+        if ( projectToken == null || projectToken.trim().length() == 0 ) {
+            projectToken = token;
+        }
+        if ( projectSubdomain == null || projectSubdomain.trim().length() == 0 ) {
+            projectSubdomain = subdomain;
+        }
         try {
-            return new CampfireNotifier(subdomain, token, projectRoom, hudsonUrl, ssl, smartNotify, sound);
+            return new CampfireNotifier(projectSubdomain, projectToken, projectRoom, hudsonUrl, ssl, smartNotify, sound);
         } catch (Exception e) {
             String message = "Failed to initialize campfire notifier - check your campfire notifier configuration settings: " + e.getMessage();
             LOGGER.log(Level.WARNING, message, e);

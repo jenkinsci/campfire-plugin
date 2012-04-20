@@ -51,6 +51,14 @@ public class Campfire {
       return this.subdomain + ".campfirenow.com";
     }
 
+    public String getSubdomain() {
+      return this.subdomain;
+    }
+
+    public String getToken() {
+      return this.token;
+    }
+
     protected String getProtocol() {
       if (this.ssl) { return "https://"; }
       return "http://";

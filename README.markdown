@@ -24,6 +24,7 @@ Other features have since been added including...
 * Play sounds on build success and failure, added by Henry Poydar.
 * Build notifications now include commit info.
 * Room to which notifications are sent can be customised per-project.
+* Subdomain and API token can be customized per-project.
 
 Note: The plugin code is a bit of a mess, partly just because I don't have a
 lot of Java experience, but also because I simply haven't got the time to tidy

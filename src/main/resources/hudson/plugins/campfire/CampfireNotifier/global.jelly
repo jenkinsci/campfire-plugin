@@ -12,10 +12,10 @@
     so it should be straightforward to find them.
   -->
 <f:section title="Global Campfire Notifier Settings">
-    <f:entry title="Subdomain" help="${rootURL}/plugin/campfire/help-globalConfig-subdomain.html">
+    <f:entry title="Default Subdomain" help="${rootURL}/plugin/campfire/help-globalConfig-subdomain.html">
         <f:textbox name="campfireSubdomain" value="${descriptor.getSubdomain()}" />
     </f:entry>
-    <f:entry title="API Token" help="${rootURL}/plugin/campfire/help-globalConfig-token.html">
+    <f:entry title="Default API Token" help="${rootURL}/plugin/campfire/help-globalConfig-token.html">
         <f:textbox name="campfireToken" value="${descriptor.getToken()}" />
     </f:entry>
     <f:entry title="Default Room Name" help="${rootURL}/plugin/campfire/help-globalConfig-room.html">

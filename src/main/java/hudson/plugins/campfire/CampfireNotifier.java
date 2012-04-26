@@ -19,19 +19,35 @@ import java.util.logging.Logger;
 
 public class CampfireNotifier extends Notifier {
 
-    private transient Campfire campfire;
+    private Campfire campfire;
     private Room room;
     private String hudsonUrl;
     private boolean smartNotify;
     private boolean sound;
 
-    // getter for project configuration..
-    // Configured room name should be null unless different from descriptor/global room name
+    // getters for project configuration..
+    // Configured room name / subdomain / token should be null unless different from descriptor/global values
     public String getConfiguredRoomName() {
         if ( DESCRIPTOR.getRoom().equals(room.getName()) ) {
             return null;
         } else {
             return room.getName();
+        }
+    }
+
+    public String getConfiguredSubdomain() {
+        if ( DESCRIPTOR.getSubdomain().equals(campfire.getSubdomain()) ) {
+            return null;
+        } else {
+            return campfire.getSubdomain();
+        }
+    }
+
+    public String getConfiguredToken() {
+        if ( DESCRIPTOR.getToken().equals(campfire.getToken()) ) {
+            return null;
+        } else {
+            return campfire.getToken();
         }
     }
 

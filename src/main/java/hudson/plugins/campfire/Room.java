@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.Date;
 
 public class Room {
-    private transient Campfire campfire;
+    private Campfire campfire;
     private String name;
     private String id;
 

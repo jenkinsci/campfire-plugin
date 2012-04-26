@@ -66,9 +66,9 @@ public class DescriptorImpl extends BuildStepDescriptor<Publisher> {
      */
     @Override
     public Publisher newInstance(StaplerRequest req, JSONObject formData) throws FormException {
-        String projectRoom = req.getParameter("roomName");
-        String projectToken = req.getParameter("cfToken");
-        String projectSubdomain = req.getParameter("cfSubdomain");
+        String projectSubdomain = req.getParameter("campfireSubdomain");
+        String projectToken = req.getParameter("campfireToken");
+        String projectRoom = req.getParameter("campfireRoom");
         if ( projectRoom == null || projectRoom.trim().length() == 0 ) {
             projectRoom = room;
         }

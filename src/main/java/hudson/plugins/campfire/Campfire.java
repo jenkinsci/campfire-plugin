@@ -26,7 +26,6 @@ import hudson.model.Hudson;
 import hudson.ProxyConfiguration;
 
 public class Campfire {
-    private HttpClient client;
     private String subdomain;
     private String token;
     private boolean ssl;
@@ -36,15 +35,19 @@ public class Campfire {
         this.subdomain = subdomain;
         this.token = token;
         this.ssl = ssl;
-        client = new HttpClient();
-        Credentials defaultcreds = new UsernamePasswordCredentials(token, "x");
-        client.getState().setCredentials(new AuthScope(getHost(), -1, AuthScope.ANY_REALM), defaultcreds);
-        client.getParams().setAuthenticationPreemptive(true);
-        client.getParams().setParameter("http.useragent", "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_4; en-us) AppleWebKit/533.16 (KHTML, like Gecko) Version/5.0 Safari/533.16");
-        ProxyConfiguration proxy = Hudson.getInstance().proxy;
-        if (proxy != null) {
-            client.getHostConfiguration().setProxy(proxy.name, proxy.port);
-        }
+    }
+
+    protected HttpClient getClient() {
+      HttpClient client = new HttpClient();
+      Credentials defaultcreds = new UsernamePasswordCredentials(this.token, "x");
+      client.getState().setCredentials(new AuthScope(getHost(), -1, AuthScope.ANY_REALM), defaultcreds);
+      client.getParams().setAuthenticationPreemptive(true);
+      client.getParams().setParameter("http.useragent", "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_4; en-us) AppleWebKit/533.16 (KHTML, like Gecko) Version/5.0 Safari/533.16");
+      ProxyConfiguration proxy = Hudson.getInstance().proxy;
+      if (proxy != null) {
+          client.getHostConfiguration().setProxy(proxy.name, proxy.port);
+      }
+      return client;
     }
 
     protected String getHost() {
@@ -69,7 +72,7 @@ public class Campfire {
         post.setRequestHeader("Content-Type", "application/xml");
         try {
             post.setRequestEntity(new StringRequestEntity(body, "application/xml", "UTF8"));
-            return client.executeMethod(post);
+            return getClient().executeMethod(post);
         } catch (IOException e) {
             throw new RuntimeException(e);
         } finally {
@@ -82,7 +85,7 @@ public class Campfire {
         get.setFollowRedirects(true);
         get.setRequestHeader("Content-Type", "application/xml");
         try {
-            client.executeMethod(get);
+            getClient().executeMethod(get);
             verify(get.getStatusCode());
             return get.getResponseBodyAsString();
         } catch (IOException e) {

@@ -25,6 +25,7 @@ public class CampfireNotifier extends Notifier {
     private String hudsonUrl;
     private boolean smartNotify;
     private boolean sound;
+    private boolean buildLog;
 
     // getters for project configuration..
     // Configured room name / subdomain / token should be null unless different from descriptor/global values
@@ -62,9 +63,9 @@ public class CampfireNotifier extends Notifier {
         initialize();
     }
 
-    public CampfireNotifier(String subdomain, String token, String room, String hudsonUrl, boolean ssl, boolean smartNotify, boolean sound) {
+    public CampfireNotifier(String subdomain, String token, String room, String hudsonUrl, boolean ssl, boolean smartNotify, boolean sound, boolean buildLog) {
         super();
-        initialize(subdomain, token, room, hudsonUrl, ssl, smartNotify, sound);
+        initialize(subdomain, token, room, hudsonUrl, ssl, smartNotify, sound, buildLog);
     }
 
     public BuildStepMonitor getRequiredMonitorService() {
@@ -121,7 +122,7 @@ public class CampfireNotifier extends Notifier {
             message = message + " (" + hudsonUrl + build.getUrl() + ")";
         }
         room.speak(message);
-        if (result != Result.SUCCESS) {
+        if (buildLog && result != Result.SUCCESS) {
             List<String> logLines = build.getLog(200);
             String log = "Build log (last 200 lines):\n";
             for (String line : logLines) {
@@ -164,10 +165,10 @@ public class CampfireNotifier extends Notifier {
     }
 
     private void initialize()  {
-        initialize(DESCRIPTOR.getSubdomain(), DESCRIPTOR.getToken(), room.getName(), DESCRIPTOR.getHudsonUrl(), DESCRIPTOR.getSsl(), DESCRIPTOR.getSmartNotify(), DESCRIPTOR.getSound());
+        initialize(DESCRIPTOR.getSubdomain(), DESCRIPTOR.getToken(), room.getName(), DESCRIPTOR.getHudsonUrl(), DESCRIPTOR.getSsl(), DESCRIPTOR.getSmartNotify(), DESCRIPTOR.getSound(), DESCRIPTOR.getBuildLog());
     }
 
-    private void initialize(String subdomain, String token, String roomName, String hudsonUrl, boolean ssl, boolean smartNotify, boolean sound) {
+    private void initialize(String subdomain, String token, String roomName, String hudsonUrl, boolean ssl, boolean smartNotify, boolean sound, boolean buildLog) {
         campfire = new Campfire(subdomain, token, ssl);
         this.room = campfire.findRoomByName(roomName);
         if ( this.room == null ) {
@@ -176,6 +177,7 @@ public class CampfireNotifier extends Notifier {
         this.hudsonUrl = hudsonUrl;
         this.smartNotify = smartNotify;
         this.sound = sound;
+        this.buildLog = buildLog;
     }
 
     @Override

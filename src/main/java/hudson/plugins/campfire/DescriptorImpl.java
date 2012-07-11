@@ -18,6 +18,7 @@ public class DescriptorImpl extends BuildStepDescriptor<Publisher> {
     private boolean ssl;
     private boolean smartNotify;
     private boolean sound;
+    private boolean buildLog;
     private static final Logger LOGGER = Logger.getLogger(DescriptorImpl.class.getName());
 
     public DescriptorImpl() {
@@ -57,6 +58,10 @@ public class DescriptorImpl extends BuildStepDescriptor<Publisher> {
         return sound;
     }
 
+    public boolean getBuildLog() {
+        return buildLog;
+    }
+
     public boolean isApplicable(Class<? extends AbstractProject> aClass) {
         return true;
     }
@@ -79,7 +84,7 @@ public class DescriptorImpl extends BuildStepDescriptor<Publisher> {
             projectSubdomain = subdomain;
         }
         try {
-            return new CampfireNotifier(projectSubdomain, projectToken, projectRoom, hudsonUrl, ssl, smartNotify, sound);
+            return new CampfireNotifier(projectSubdomain, projectToken, projectRoom, hudsonUrl, ssl, smartNotify, sound, buildLog);
         } catch (Exception e) {
             String message = "Failed to initialize campfire notifier - check your campfire notifier configuration settings: " + e.getMessage();
             LOGGER.log(Level.WARNING, message, e);
@@ -99,8 +104,9 @@ public class DescriptorImpl extends BuildStepDescriptor<Publisher> {
         ssl = req.getParameter("campfireSsl") != null;
         smartNotify = req.getParameter("campfireSmartNotify") != null;
         sound = req.getParameter("campfireSound") != null;
+        buildLog = req.getParameter("campfireBuildLog") != null;
         try {
-            new CampfireNotifier(subdomain, token, room, hudsonUrl, ssl, smartNotify, sound);
+            new CampfireNotifier(subdomain, token, room, hudsonUrl, ssl, smartNotify, sound, buildLog);
         } catch (Exception e) {
             String message = "Failed to initialize campfire notifier - check your global campfire notifier configuration settings: " + e.getMessage();
             LOGGER.log(Level.WARNING, message, e);

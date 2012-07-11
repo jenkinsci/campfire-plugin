@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -24,6 +25,7 @@ public class CampfireNotifier extends Notifier {
     private String hudsonUrl;
     private boolean smartNotify;
     private boolean sound;
+    private boolean buildLog;
 
     // getters for project configuration..
     // Configured room name / subdomain / token should be null unless different from descriptor/global values
@@ -61,9 +63,9 @@ public class CampfireNotifier extends Notifier {
         initialize();
     }
 
-    public CampfireNotifier(String subdomain, String token, String room, String hudsonUrl, boolean ssl, boolean smartNotify, boolean sound) {
+    public CampfireNotifier(String subdomain, String token, String room, String hudsonUrl, boolean ssl, boolean smartNotify, boolean sound, boolean buildLog) {
         super();
-        initialize(subdomain, token, room, hudsonUrl, ssl, smartNotify, sound);
+        initialize(subdomain, token, room, hudsonUrl, ssl, smartNotify, sound, buildLog);
     }
 
     public BuildStepMonitor getRequiredMonitorService() {
@@ -114,11 +116,23 @@ public class CampfireNotifier extends Notifier {
         }
         String resultString = result.toString();
         if (!smartNotify && result == Result.SUCCESS) resultString = resultString.toLowerCase();
-        String message = build.getProject().getName() + " " + build.getDisplayName() + " \"" + changeString + "\": " + resultString;
+        String emoji = (result == Result.SUCCESS ? ":sparkles:" : ":red_circle:");
+        String message = emoji + build.getProject().getName() + " " + build.getDisplayName() + " \"" + changeString + "\": " + resultString;
         if (hudsonUrl != null && hudsonUrl.length() > 1 && (smartNotify || result != Result.SUCCESS)) {
             message = message + " (" + hudsonUrl + build.getUrl() + ")";
         }
         room.speak(message);
+        if (buildLog && result != Result.SUCCESS) {
+            List<String> logLines = build.getLog(200);
+            String log = "Build log (last 200 lines):\n";
+            for (String line : logLines) {
+                log += line + '\n';
+            }
+            log = log.replaceAll("&", "&amp;");
+            log = log.replaceAll("<", "&lt;");
+            log = log.replaceAll(">", "&gt;");
+            room.paste(log);
+        }
         if (sound) {
           String message_sound;
           if ("FAILURE".equals(resultString)) {
@@ -151,10 +165,10 @@ public class CampfireNotifier extends Notifier {
     }
 
     private void initialize()  {
-        initialize(DESCRIPTOR.getSubdomain(), DESCRIPTOR.getToken(), room.getName(), DESCRIPTOR.getHudsonUrl(), DESCRIPTOR.getSsl(), DESCRIPTOR.getSmartNotify(), DESCRIPTOR.getSound());
+        initialize(DESCRIPTOR.getSubdomain(), DESCRIPTOR.getToken(), room.getName(), DESCRIPTOR.getHudsonUrl(), DESCRIPTOR.getSsl(), DESCRIPTOR.getSmartNotify(), DESCRIPTOR.getSound(), DESCRIPTOR.getBuildLog());
     }
 
-    private void initialize(String subdomain, String token, String roomName, String hudsonUrl, boolean ssl, boolean smartNotify, boolean sound) {
+    private void initialize(String subdomain, String token, String roomName, String hudsonUrl, boolean ssl, boolean smartNotify, boolean sound, boolean buildLog) {
         campfire = new Campfire(subdomain, token, ssl);
         this.room = campfire.findRoomByName(roomName);
         if ( this.room == null ) {
@@ -163,6 +177,7 @@ public class CampfireNotifier extends Notifier {
         this.hudsonUrl = hudsonUrl;
         this.smartNotify = smartNotify;
         this.sound = sound;
+        this.buildLog = buildLog;
     }
 
     @Override

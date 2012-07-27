@@ -50,7 +50,7 @@ This should be as simple as asking your package manager to install maven, e.g.
 Then clone the repository and build the package
 
     git clone git://github.com/jenkinsci/campfire-plugin.git
-    cd jenkins_campfire_plugin
+    cd campfire-plugin
     mvn package
 
 When the build has completed, you'll find a campfire.hpi file in the target

@@ -49,7 +49,7 @@ This should be as simple as asking your package manager to install maven, e.g.
 
 Then clone the repository and build the package
 
-    git clone git://github.com/thickpaddy/jenkins_campfire_plugin.git
+    git clone git://github.com/jenkinsci/campfire-plugin.git
     cd jenkins_campfire_plugin
     mvn package
 

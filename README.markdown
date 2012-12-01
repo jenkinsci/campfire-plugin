@@ -35,51 +35,11 @@ Yay, thanks Dante, and welcome aboard!
 
 ### Installation
 
-A pre-built (snapshot) hpi file is provided in jenkins-on-jenkins ( http://ci.jenkins-ci.org/view/Plugins/job/plugins_campfire/ ).
-You should be able to upload this to your Jenkins instance via the advanced tab of the plugin
-manager. This build should be based on the latest stable/tagged release. To get
-the latest development version, you should build from source...
-
-### Building from source
-
-You'll need to have JDK 6 and maven installed to build the plugin from source.
-This should be as simple as asking your package manager to install maven, e.g.
-
-    brew install maven
-
-Then clone the repository and build the package
-
-    git clone git://github.com/jenkinsci/campfire-plugin.git
-    cd campfire-plugin
-    mvn package
-
-When the build has completed, you'll find a campfire.hpi file in the target
-directory, which needs to be uploaded to your Jenkins installation. If you
-already have a campfire plugin installed, you need to delete it first, e.g.
-
-    rm -rf /var/lib/jenkins/plugins/campfire*
-
-Then either use the advanced tab of the plugin manager to upload the hpi file or
-just copy it to the plugins directory, e.g.
-
-    cp target/campfire.hpi /var/lib/jenkins/plugins/
-
-Finally, restart jenkins (note: not reload configuration, restart the jenkins
-daemon).
+This plugin is available from the [Update Center]
+(https://wiki.jenkins-ci.org/display/JENKINS/Plugins#Plugins-Howtoinstallplugins)
+in your Jenkins installation.
 
 ### Troubleshooting
-
-If you run into problems building the plugin with Maven, make sure Maven is
-finding the right jdk...
-
-run mvn --version and check the output, if it's not finding jdk 6, make sure you
-have jdk 6 installed and make sure that the current jdk symlink points at
-version 6.  On OSX, check that
-/System/Library/Frameworks/JavaVM.framework/Versions/1.6 exists and that
-/System/Library/Frameworks/JavaVM.framework/Versions/CurrentJDK points to it.
-If not, remove the CurrentJDK symlink and re-create it, pointing at the 1.6
-directory. Other *nix users may run into similar issues, the solution should be
-the same, just with different paths.
 
 If you get HttpClient or WebClient exceptions, that probably means you've got
 some configuration setting wrong (while there is some validation of

@@ -12,4 +12,9 @@
     <f:entry title="Project Room Name" description="Optional. Use to send notifications to a room other than the default (${descriptor.getRoom()})" help="${rootURL}/plugin/campfire/help-projectConfig-room.html">
       <f:textbox name="campfireRoom" value="${instance.getConfiguredRoomName()}"/>
     </f:entry>
+    <f:entry title="Project Notification Message Template" description="Optional. Override the message sent to the Campfire room other than the default (${descriptor.getNotificationTemplate()})."
+      help="${rootURL}/plugin/campfire/help-projectConfig-notificationTemplate.html">
+      <f:textbox name="campfireNotificationTemplate" value="${instance.getConfiguredNotificationTemplate()}" />
+    </f:entry>
+
 </j:jelly>

@@ -14,14 +14,17 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.Map;
 
 public class CampfireNotifier extends Notifier {
 
     private Campfire campfire;
     private Room room;
     private String hudsonUrl;
+    private String notificationTemplate;
     private boolean smartNotify;
     private boolean sound;
 
@@ -51,6 +54,14 @@ public class CampfireNotifier extends Notifier {
         }
     }
 
+    public String getConfiguredNotificationTemplate() {
+        if ( DESCRIPTOR.getNotificationTemplate().equals(notificationTemplate) ) {
+            return null;
+        } else {
+            return notificationTemplate;
+        }
+    }
+
     @Extension
     public static final DescriptorImpl DESCRIPTOR = new DescriptorImpl();
 
@@ -61,18 +72,53 @@ public class CampfireNotifier extends Notifier {
         initialize();
     }
 
-    public CampfireNotifier(String subdomain, String token, String room, String hudsonUrl, boolean ssl, boolean smartNotify, boolean sound) {
+    public CampfireNotifier(String subdomain, String token, String room, String hudsonUrl, String notificationTemplate,
+                            boolean ssl, boolean smartNotify, boolean sound) {
         super();
-        initialize(subdomain, token, room, hudsonUrl, ssl, smartNotify, sound);
+        initialize(subdomain, token, room, hudsonUrl, notificationTemplate, ssl, smartNotify, sound);
     }
 
     public BuildStepMonitor getRequiredMonitorService() {
         return BuildStepMonitor.BUILD;
     }
 
-    private void publish(AbstractBuild<?, ?> build) throws IOException {
-        checkCampfireConnection();
-        Result result = build.getResult();
+    private String interpolate(String base, Map<String, String> context) {
+        StringBuilder builder = new StringBuilder();
+        int pos = 0;
+
+        while (pos < base.length()) {
+            int startIndex = base.indexOf("%", pos);
+            if (startIndex >= 0) {
+                builder.append(base.substring(pos, startIndex));
+
+                int endIndex = base.indexOf("%", startIndex + 1);
+
+                if (endIndex > 0) {
+                    String key = base.substring(startIndex + 1, endIndex).trim();
+                    if (key.length() > 0) {
+                        String value = context.get(key);
+                        if (value == null) {
+                            value = "";
+                        }
+                        builder.append(value);
+                    } else {
+                        builder.append("%");
+                    }
+                    pos = endIndex + 1;
+                } else {
+                    // should error out here but quick and dirty for now
+                    builder.append("%");
+                    pos = startIndex + 1;
+                }
+            } else {
+                builder.append(base.substring(pos));
+                pos = base.length();
+            }
+        }
+        return builder.toString();
+    }
+
+    private String computeChangeString(AbstractBuild<?, ?> build) {
         String changeString = "No changes";
         if (!build.hasChangeSetComputed()) {
             changeString = "Changes not determined";
@@ -112,16 +158,55 @@ public class CampfireNotifier extends Notifier {
                 changeString = commitMsg + " - " + entry.getAuthor().toString();
             }
         }
+        return changeString;
+    }
+
+    private Map<String, String> buildContextFor(AbstractBuild<?, ?> build) {
+        HashMap<String, String> context = new HashMap<String, String>();
+
+        context.put("PROJECT_NAME", build.getProject().getName());
+
+        context.put("BUILD_DISPLAY_NAME", build.getDisplayName());
+
+        Result result = build.getResult();
         String resultString = result.toString();
-        if (!smartNotify && result == Result.SUCCESS) resultString = resultString.toLowerCase();
-        String message = build.getProject().getName() + " " + build.getDisplayName() + " \"" + changeString + "\": " + resultString;
-        if (hudsonUrl != null && hudsonUrl.length() > 1 && (smartNotify || result != Result.SUCCESS)) {
-            message = message + " (" + hudsonUrl + build.getUrl() + ")";
+        context.put("RESULT", resultString);
+        if (!smartNotify && result == Result.SUCCESS) {
+            context.put("SMART_RESULT", resultString.toLowerCase());
+        } else {
+            context.put("SMART_RESULT", resultString);
         }
+
+        context.put("CHANGES", computeChangeString(build));
+
+        if (hudsonUrl != null && hudsonUrl.length() > 1) {
+            context.put("BUILD_URL", hudsonUrl + build.getUrl());
+        }
+
+        return context;
+    }
+
+    private void publish(AbstractBuild<?, ?> build) throws IOException {
+        checkCampfireConnection();
+
+        LOGGER.log(Level.INFO, "notificationTemplate = '" + (notificationTemplate != null ? notificationTemplate : "<null>") + "'");
+        if (notificationTemplate == null || notificationTemplate.trim().length() == 0) {
+            LOGGER.log(Level.INFO, "no configured message");
+            return;
+        }
+        LOGGER.log(Level.INFO, "notificationTemplate = '" + (notificationTemplate != null ? notificationTemplate : "<null>") + "'");
+
+        Map<String, String> context = buildContextFor(build);
+        LOGGER.log(Level.INFO, "buildContextFor returning " + context.toString());
+
+        String message = interpolate(notificationTemplate, context);
+        LOGGER.log(Level.INFO, "message = '" + message + "'");
+
         room.speak(message);
+
         if (sound) {
           String message_sound;
-          if ("FAILURE".equals(resultString)) {
+          if ("FAILURE".equals(build.getResult().toString())) {
             message_sound = "trombone";
           } else {
             message_sound = "rimshot";
@@ -151,16 +236,21 @@ public class CampfireNotifier extends Notifier {
     }
 
     private void initialize()  {
-        initialize(DESCRIPTOR.getSubdomain(), DESCRIPTOR.getToken(), room.getName(), DESCRIPTOR.getHudsonUrl(), DESCRIPTOR.getSsl(), DESCRIPTOR.getSmartNotify(), DESCRIPTOR.getSound());
+        initialize(DESCRIPTOR.getSubdomain(), DESCRIPTOR.getToken(), room.getName(), DESCRIPTOR.getHudsonUrl(),
+            DESCRIPTOR.getNotificationTemplate(), DESCRIPTOR.getSsl(), DESCRIPTOR.getSmartNotify(),
+            DESCRIPTOR.getSound());
     }
 
-    private void initialize(String subdomain, String token, String roomName, String hudsonUrl, boolean ssl, boolean smartNotify, boolean sound) {
+    private void initialize(String subdomain, String token, String roomName, String hudsonUrl, String notificationTemplate,
+                            boolean ssl, boolean smartNotify, boolean sound) {
         campfire = new Campfire(subdomain, token, ssl);
         this.room = campfire.findRoomByName(roomName);
         if ( this.room == null ) {
             throw new RuntimeException("Room '" + roomName + "' not found - verify name and room permissions");
         }
         this.hudsonUrl = hudsonUrl;
+        this.notificationTemplate = notificationTemplate;
+        LOGGER.log(Level.INFO, "CampfireNotifier: initialize: '" + (notificationTemplate != null ? notificationTemplate : "<null>") + "'");
         this.smartNotify = smartNotify;
         this.sound = sound;
     }

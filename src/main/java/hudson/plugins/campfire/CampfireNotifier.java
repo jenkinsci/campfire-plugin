@@ -9,6 +9,8 @@ import hudson.scm.ChangeLogSet;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
 
+import org.kohsuke.stapler.DataBoundConstructor;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -72,6 +74,7 @@ public class CampfireNotifier extends Notifier {
         initialize();
     }
 
+    @DataBoundConstructor
     public CampfireNotifier(String subdomain, String token, String room, String hudsonUrl, String notificationTemplate,
                             boolean ssl, boolean smartNotify, boolean sound) {
         super();

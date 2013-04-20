@@ -1,0 +1,17 @@
+<div>
+  <p>Optionally specify the template used to construct the notifications sent to the Campfire room.</p>
+  <p>Supported replacements:</p>
+  <ul>
+    <li>%PROJECT_NAME% -- Name of the Jenkins project</li>
+    <li>%PROJECT_DISPLAY_NAME% -- Display name of the Jenkins project</li>
+    <li>%PROJECT_FULL_NAME% -- Full name of the Jenkins project (includes names of parent projects)</li>
+    <li>%PROJECT_FULL_DISPLAY_NAME% -- Full display name of the Jenkins project (includes display names of parent projects)</li>
+    <li>%BUILD_DISPLAY_NAME% -- Display name for a particular build</li>
+    <li>%RESULT% -- Result of a particular build (capitalized)</li>
+    <li>%SMART_RESULT% -- Result of a particular build (capitalized except for "success")</li>
+    <li>%CHANGES% -- Brief description of the changes in the build</li>
+    <li>%BUILD_URL% -- URL for a particular build</li>
+    <li>%% -- Bare % character</li>
+  </ul>
+  <p>Default: %PROJECT_NAME% %BUILD_DISPLAY_NAME% (%CHANGES%): %SMART_RESULT% (%BUILD_URL%)</p>
+</div>

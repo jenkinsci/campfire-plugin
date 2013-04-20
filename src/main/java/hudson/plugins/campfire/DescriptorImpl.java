@@ -10,11 +10,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class DescriptorImpl extends BuildStepDescriptor<Publisher> {
+    private static final String DEFAULT_NOTIFICATION_TEMPLATE = "%PROJECT_NAME% %BUILD_DISPLAY_NAME% (%CHANGES%): %SMART_RESULT% (%BUILD_URL%)";
+
     private boolean enabled = false;
     private String subdomain;
     private String token;
     private String room;
     private String hudsonUrl;
+    private String notificationTemplate = DEFAULT_NOTIFICATION_TEMPLATE;
     private boolean ssl;
     private boolean smartNotify;
     private boolean sound;
@@ -23,6 +26,10 @@ public class DescriptorImpl extends BuildStepDescriptor<Publisher> {
     public DescriptorImpl() {
         super(CampfireNotifier.class);
         load();
+    }
+
+    public String getDefaultNotificationTemplate() {
+        return DEFAULT_NOTIFICATION_TEMPLATE;
     }
 
     public boolean isEnabled() {
@@ -43,6 +50,10 @@ public class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
     public String getHudsonUrl() {
         return hudsonUrl;
+    }
+
+    public String getNotificationTemplate() {
+        return notificationTemplate;
     }
 
     public boolean getSsl() {
@@ -69,6 +80,9 @@ public class DescriptorImpl extends BuildStepDescriptor<Publisher> {
         String projectSubdomain = req.getParameter("campfireSubdomain");
         String projectToken = req.getParameter("campfireToken");
         String projectRoom = req.getParameter("campfireRoom");
+        String projectNotificationTemplate = req.getParameter("campfireNotificationTemplate");
+        LOGGER.log(Level.INFO, "newInstance: notificationTemplate = '" + (notificationTemplate != null ? notificationTemplate : "<null>")+ "'");
+        LOGGER.log(Level.INFO, "newInstance: projectNotificationTemplate = '" + (projectNotificationTemplate != null ? projectNotificationTemplate : "<null>") + "'");
         if ( projectRoom == null || projectRoom.trim().length() == 0 ) {
             projectRoom = room;
         }
@@ -78,8 +92,12 @@ public class DescriptorImpl extends BuildStepDescriptor<Publisher> {
         if ( projectSubdomain == null || projectSubdomain.trim().length() == 0 ) {
             projectSubdomain = subdomain;
         }
+        if ( projectNotificationTemplate == null || projectNotificationTemplate.trim().length() == 0 ) {
+            projectNotificationTemplate = notificationTemplate;
+        }
         try {
-            return new CampfireNotifier(projectSubdomain, projectToken, projectRoom, hudsonUrl, ssl, smartNotify, sound);
+            return new CampfireNotifier(projectSubdomain, projectToken, projectRoom, hudsonUrl,
+                projectNotificationTemplate, ssl, smartNotify, sound);
         } catch (Exception e) {
             String message = "Failed to initialize campfire notifier - check your campfire notifier configuration settings: " + e.getMessage();
             LOGGER.log(Level.WARNING, message, e);
@@ -87,6 +105,13 @@ public class DescriptorImpl extends BuildStepDescriptor<Publisher> {
         }
     }
 
+    /**
+     *
+     * @param req
+     * @param json
+     * @return true if successful, false otherwise to keep the client in the same config page
+     * @throws FormException
+     */
     @Override
     public boolean configure(StaplerRequest req, JSONObject json) throws FormException {
         subdomain = req.getParameter("campfireSubdomain");
@@ -96,11 +121,16 @@ public class DescriptorImpl extends BuildStepDescriptor<Publisher> {
         if ( hudsonUrl != null && !hudsonUrl.endsWith("/") ) {
             hudsonUrl = hudsonUrl + "/";
         }
+        notificationTemplate = req.getParameter("campfireNotificationTemplate");
+        if (notificationTemplate == null || notificationTemplate.trim().length() == 0) {
+            notificationTemplate = DEFAULT_NOTIFICATION_TEMPLATE;
+        }
+        LOGGER.log(Level.INFO, "configure: notificationTemplate = '" + notificationTemplate + "'");
         ssl = req.getParameter("campfireSsl") != null;
         smartNotify = req.getParameter("campfireSmartNotify") != null;
         sound = req.getParameter("campfireSound") != null;
         try {
-            new CampfireNotifier(subdomain, token, room, hudsonUrl, ssl, smartNotify, sound);
+            new CampfireNotifier(subdomain, token, room, hudsonUrl, notificationTemplate, ssl, smartNotify, sound);
         } catch (Exception e) {
             String message = "Failed to initialize campfire notifier - check your global campfire notifier configuration settings: " + e.getMessage();
             LOGGER.log(Level.WARNING, message, e);

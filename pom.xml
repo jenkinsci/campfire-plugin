@@ -9,7 +9,7 @@
 
   <artifactId>campfire</artifactId>
   <packaging>hpi</packaging>
-  <version>2.7-SNAPSHOT</version>
+  <version>2.7</version>
   <name>Jenkins Campfire Plugin</name>
   <description>A build status notifier that sends notifications to Campfire rooms</description>
   <url>https://wiki.jenkins-ci.org/display/JENKINS/Campfire+Plugin</url>
